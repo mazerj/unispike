@@ -19,6 +19,12 @@ function [lfps, snips, spks, wbs] = p2mtdt(pf, what)
 %    spks - same format as lfps, but for highpass data
 %     wbs - continuous wideband signal
 %
+%   note: timebase is aligned to the pype datastream, but in
+%         'secs' instead of 'ms' -- so first sample of the spks
+%         for a given trial corresponds to the 'start' event,
+%         and has a time of 0, the last sample matches the 'stop'
+%         event..
+%
 %Tue Dec 29 17:11:28 2009 mazer 
 %
 %Thu Mar 11 12:22:02 2010 mazer 
