@@ -65,7 +65,7 @@ for inum = 1:length(indexlist)
   index = indexlist{inum};
 
   if length(indexlist) > 1
-    fprintf('[reading block #%d]\n', inum);
+    fprintf('[''%s'']\n', index.blockname_);
   end
   
   if ~isnan(user_chlist)
@@ -74,6 +74,13 @@ for inum = 1:length(indexlist)
     [~, chlist] = tdtgetchns(index);
   end
   [tstart, tstop] = tdtgettrials(index);
+
+  % make sure that tstart isn't longer than tstop -- which could
+  % happen if the tdt was stopped in mid-trial or something.. this
+  % was causing errors!
+  while length(tstop) < length(tstart)
+    tstart = tstart(1:(end-1));
+  end
   
   if any(what == 'S')
     for ch = 1:NCHAN

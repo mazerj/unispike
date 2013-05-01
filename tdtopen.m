@@ -40,6 +40,7 @@ if isstruct(varargin{1})
   
   for n = 1:length(blocklist)
     indexlist{n} = tdtraw(tank, blocklist{n});
+    indexlist{n}.blockname_ = blocklist{n};
   end
 else
   tank = varargin{1};
