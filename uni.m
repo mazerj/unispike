@@ -21,14 +21,16 @@ function state = uni(state)
 %      using matlab's getpref/setpref functions
 %
 
+verbose=0;
+
 if nargin == 1
   switch lower(state)
     case {'off', '0', 0}
       setpref('uni', 'uniGen', 0);
-      fprintf('[Uni file generation DISABLED]\n');
+      if verbose, fprintf('[Uni file generation DISABLED]\n'); end
     case {'on', '1', 1}
       setpref('uni', 'uniGen', 1);
-      fprintf('[Uni file generation ENABLED]\n');
+      if verbose, fprintf('[Uni file generation ENABLED]\n'); end
     otherwise
       error('uni ON|OFF or 0|1')
   end
