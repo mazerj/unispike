@@ -67,7 +67,7 @@ else
   fprintf('[extracting %s]\n', pf.src);
   if isfield(pf.rec(1).params, 'tdt_tank')
     % tucker-davis (TDT) recording
-    [lfps, snips, spks] = p2mtdt(pf, 'lS');
+    [lfps, snips, spikes, ~] = p2mtdt(pf, 'lSs');
   elseif (isfield(pf.rec(1).params, 'acute') && pf.rec(1).params.acute==1)
     % spike2 datafile (acute prep) -- no snips (yet)
     error('Use p2mS2() for Spike2 datafiles');
@@ -77,7 +77,7 @@ else
   end
   if ~isempty(lfps) || ~isempty(snips)
     try
-        save(cachefile, 'lfps', 'snips');
+        save(cachefile, 'lfps', 'snips', 'spikes');
         fprintf('[cached %s]\n', cachefile);
     catch E
         fprintf(1, 'Unable to write cachefile to disk: %s', getreport(E));
