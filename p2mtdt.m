@@ -47,7 +47,9 @@ lfps = {};
 spks = {};
 wbs = {};
 
+fprintf('[indexing tank...');
 indexlist = tdtopen(pf);
+fprintf('done]\n');
 
 mask  = getenv('CHNS');
 if ~isempty(mask)
@@ -61,12 +63,16 @@ else
   user_chlist = NaN;
 end
 
+stop = 0;
+nvalid = 0;
 for inum = 1:length(indexlist)
+  if stop
+    break
+  end
   index = indexlist{inum};
 
-  if length(indexlist) > 1
-    fprintf('[''%s'']\n', index.blockname_);
-  end
+  fprintf('[p2mtdt: processing ''%s'' (%d/%d)]\n', ...
+          index.blockname_, inum, length(indexlist));
   
   if ~isnan(user_chlist)
     chlist = user_chlist;
@@ -74,12 +80,29 @@ for inum = 1:length(indexlist)
     [~, chlist] = tdtgetchns(index);
   end
   [tstart, tstop] = tdtgettrials(index);
-
-  % make sure that tstart isn't longer than tstop -- which could
-  % happen if the tdt was stopped in mid-trial or something.. this
-  % was causing errors!
+  
+  if tstart(1) > tstop(1)
+    % somehow tdt missed the initial start signal.. this should
+    % propagate through the rest of the code and lead to an empty
+    % trace for this trial, which means no tdt datastream available.
+    tstart = [NaN tstart];
+  end
+  
   while length(tstop) < length(tstart)
+    % finish processing this block and then stop.. data beyond this
+    % point is suspect..
     tstart = tstart(1:(end-1));
+    stop = 1;
+  end
+  
+  nvalid = nvalid + length(tstop);
+  if stop
+    fprintf('ERROR: %s\n', pf.src);
+    fprintf('       Mismatch between # trials in tdtTank and pf file.\n');
+    fprintf('       This likely means the tank got out of sync and\n');
+    fprintf('       can not be realigned.\n');
+    fprintf('\n');
+    fprintf('       Only first %d records are usable.\n', nvalid);
   end
   
   if any(what == 'S')

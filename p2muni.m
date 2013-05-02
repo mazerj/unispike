@@ -48,7 +48,13 @@ if iscell(pf)
   end
   return
 elseif ischar(pf)
-  pf = p2mLoad(pf, [], 0);
+  us=uni();
+  try
+    pf = p2mLoad2(pf);                  % p2mLoad2() handles .000 & 000.p2m...
+    uni(us);
+  catch
+    uni(us);
+  end
 end
 
 if length(pf.rec) < 1
@@ -81,6 +87,7 @@ else
   end
   if ~isempty(lfps) || ~isempty(snips)
     try
+        fprintf('[caching %s]\n', cachefile);
         save(cachefile, 'lfps', 'snips', 'spikes');
         fprintf('[cached %s]\n', cachefile);
     catch E
@@ -93,7 +100,10 @@ ok = 0;
 for k = 1:length(lfps)
   if ~isempty(lfps{k})
     if length(pf.rec) > max(lfps{k}.tnum)
-      fprintf('p2muni: lfp data missing trials: %s\n', pf.src);
+      fprintf('p2muni: %s\n', pf.src);
+      fprintf('  TDT datasteam missing trials. Likely tank corruption.');
+      fprintf('  Trim pf.rec(:) => (1:%d)\n', max(lfps{k}.tnum));
+      break;
     elseif length(pf.rec) < max(lfps{k}.tnum)
       fprintf('p2muni: lfp data has too many trials: %s\n', pf.src);
       fprintf('        try updating p2m file!\n');
