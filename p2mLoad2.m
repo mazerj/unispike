@@ -114,7 +114,7 @@ try
   pf = p2mLoad(fname, [], 0);
   if uniGen
     try
-      [pf.lfps, pf.snips] = p2muni(pf);
+      [pf.lfps, pf.snips, pf.spikes] = p2muni(pf);
     catch
       fprintf('[p2mLoad2: found no uni data]\n', basename(fname));
     end
