@@ -1,5 +1,5 @@
-function [lfps, snips] = p2muni(pf, force)
-%function [lfps, snips] = p2muni(pf, [force])
+function [lfps, snips, spikes] = p2muni(pf, force)
+%function [lfps, snips, spikes] = p2muni(pf, [force])
 %  Read spike and LFP data from either TDT or Plexon data files
 %  into standard 'unified' format (see HELP UNISPIKE)
 %
@@ -10,7 +10,9 @@ function [lfps, snips] = p2muni(pf, force)
 %
 %OUTPUT
 %  lfps   - standardized format LFP data -- all channels
-%  spikes - standardized format spike snippet data -- all channels
+%  snip   - standardized format spike snippet data -- all channels
+%  spikes - standardized format raw continuous (per trial) spike
+%           data -- all channels
 %
 %NOTE
 %  - If possible -- this cache's the resulting extracted data to a
@@ -71,9 +73,11 @@ else
   elseif (isfield(pf.rec(1).params, 'acute') && pf.rec(1).params.acute==1)
     % spike2 datafile (acute prep) -- no snips (yet)
     error('Use p2mS2() for Spike2 datafiles');
+    lfps = NaN; snips = NaN; spikes = NaN;
   else
     % plexon MAP box recording
     [lfps, snips] = p2mplx(pf);
+    spikes = NaN;
   end
   if ~isempty(lfps) || ~isempty(snips)
     try
@@ -91,7 +95,7 @@ for k = 1:length(lfps)
     if length(pf.rec) > max(lfps{k}.tnum)
       fprintf('p2muni: lfp data missing trials: %s\n', pf.src);
     elseif length(pf.rec) < max(lfps{k}.tnum)
-      fprintf('p2muni: lfp data too many trials: %s\n', pf.src);
+      fprintf('p2muni: lfp data has too many trials: %s\n', pf.src);
       fprintf('        try updating p2m file!\n');
       break
     end
