@@ -1,7 +1,7 @@
 BINDIR=/auto/share/pypeextra
 
 install:
-	chmod +x *.sh dbfind unisync.py
+	chmod +x *.sh unisync.py
 	cp *.m dbfind tdtlocate.py $(BINDIR)
 	cp p2muni.sh $(BINDIR)/p2muni
 	cp p2mS2.sh $(BINDIR)/p2mS2
