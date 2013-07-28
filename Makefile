@@ -1,4 +1,4 @@
-BINDIR=/auto/share/pypeextra
+BINDIR ?= /auto/share/pypeextra
 
 install:
 	chmod +x *.sh unisync.py
@@ -11,7 +11,7 @@ install:
 	chmod -x *.sh unisync.py
 
 SON:
-	cat SON.tgz | (cd /auto/share/matlab-local; tar xfz -)
+	cat SON.tgz | (cd $(BINDIR); tar xfz -)
 
 clean:
 	@$(RM)  \#*~ .*~ *.pyc *svn-commit.tmp* TAGS
