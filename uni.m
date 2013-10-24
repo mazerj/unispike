@@ -1,5 +1,5 @@
-function state = uni(state)
-%function state = uni(state)
+function oldstate = uni(state)
+%function oldstate = uni(state)
 %
 %  Toggle automatic extraction of uni state -- this is to save time
 %  when you're recording. Uni
@@ -9,8 +9,7 @@ function state = uni(state)
 %             If state is not specified, report current state.
 %
 %  OUTPUT:
-%    boolean current state (after input state is applied); to query
-%    current w/o changing, call with no args
+%    boolean initial state on call (call w/o args to just query state)
 %
 %  NOTES:
 %    Fri Feb  1 14:58:17 2013 mazer 
@@ -23,7 +22,8 @@ function state = uni(state)
 
 verbose=0;
 
-if nargin == 1
+oldstate = getpref('uni', 'uniGen', 1);
+if nargin > 0
   switch lower(state)
     case {'off', '0', 0}
       setpref('uni', 'uniGen', 0);
@@ -35,4 +35,3 @@ if nargin == 1
       error('uni ON|OFF or 0|1')
   end
 end
-state = getpref('uni', 'uniGen', 1);

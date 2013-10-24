@@ -28,6 +28,10 @@ if ~exist('force', 'var')
   force = 0;
 end
 
+lfps = NaN;
+snips = NaN;
+spikes = NaN;
+
 if iscell(pf)
   % Called in batch mode -- if there's an error stop immediattely
   % and record the error. This is really for out-of-memory errors.
