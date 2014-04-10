@@ -62,7 +62,7 @@ base = sprintf('%s/%s/%s_%s', tankdir, block, tankname, block);
 index.tsqfile = [base '.tsq'];
 index.tevfile = [base '.tev'];
 
-tic
+%%BENCH%% tic;
 mm = memmapfile(index.tsqfile, ...
                 'Offset', 0,  ...
                 'Format', { ...
@@ -72,11 +72,11 @@ mm = memmapfile(index.tsqfile, ...
                     'uint16' [1 1] 'channel'; ...
                     'uint16' [1 1] 'sortcode'; ...
                     'double' [1 1] 'timestamp'; ...
-                    'int64' [1 1] 'offset'; ...
+                    'uint64' [1 1] 'offset'; ...
                     'int32' [1 1] 'format'; ...
                     'single' [1 1] 'frequency'; ...
                    });
-x = mm.Data;
+x = mm.Data(3:end-1);
 index.size = double([x.size]);
 index.type = double([x.type]);
 index.icode = double([x.icode]);
@@ -105,38 +105,56 @@ function d = getdata(varargin)
 index = varargin{1};
 ns = varargin{2};
 
-tic;
-tev = fopen(index.tevfile, 'r');
+%%BENCH%% tic;
+%tev = fopen(index.tevfile, 'r');
 nsamps = sum(index.size(ns) - 10);
 %d = NaN * zeros([2 nsamps]);
 d = zeros([2 nsamps]);
 ix = 1;
 snipcodes = [icode('Snip'), icode('eNeu')];
 for n = ns
+  sevfile = strrep(index.tevfile, '.tev', ...
+                   sprintf('_%s_Ch%d.sev', ...
+                           icode(index.icode(n)), ...
+                           index.channel(n)));
+  tev = fopen(sevfile, 'r');
+  if tev < 0
+    tev = fopen(index.tevfile, 'r');
+  end
   if fseek(tev, index.offset(n), -1) < 0
     error(ferror(tev))
   end
-  npts = index.size(n) - 10;
-  t = index.timestamp(n) + ((0:(npts-1)) ./ index.frequency(n));
+  npts = index.size(n) - 10;            % in 4byte units
+  switch index.format(n)
+    case 0                              % DFORM_FLOAT
+      nsamp = npts * 4 / 4;             % nlongs / sizeof(long) * size(float32)
+      [v, cnt] = fread(tev, nsamp, 'float32', 0, 'a');
+      if cnt ~= nsamp, error('ran out of data'); end
+      d(2,ix+(0:nsamp-1)) = v;
+    case 2                              % DFORM_SHORT
+      nsamp = npts * 4 / 2;             % nlongs / sizeof(long) * size(int16)
+      [v, cnt] = fread(tev, nsamp, 'int16', 0, 'a');
+      if cnt ~= nsamp, error('ran out of data'); end
+      d(2,ix+(0:nsamp-1)) = v;
+    case 4                              % DFORM_DOUBLE
+      nsamp = npts * 4 / 8;             % nlongs / sizeof(long) * size(float64)
+      [v, cnt] = fread(tev, nsamp, 'float64', 0, 'a');
+      if cnt ~= nsamp, error('ran out of data'); end
+      d(2,ix+(0:nsamp-1)) = v;
+    otherwise
+      error('unsupported data format: %d', index.format(n));
+  end
+  fclose(tev);
+  t = index.timestamp(n) + ((0:(nsamp-1)) ./ index.frequency(n));;
   if ismember(index.icode(n), snipcodes)
     % snip timestamps indicate time of 1st threshold crossing, which is
     % 1/4 way into the trace, subtract this out:
-    t = t - ((npts + 2) / 4) / index.frequency(n);
+    t = t - ((nsamp + 2) / 4) / index.frequency(n);
   end
-  d(1,ix+(0:npts-1)) = t;
-  switch index.format(n)
-    case 0, d(2,ix+(0:npts-1)) = fread(tev, npts, 'float32', 0, 'a');
-    case 1, d(2,ix+(0:npts-1)) = fread(tev, npts, 'int32', 0, 'a');
-    case 2, d(2,ix+(0:npts-1)) = fread(tev, npts*2, 'int16', 0, 'a');
-    case 3, d(2,ix+(0:npts-1)) = fread(tev, npts*4, 'int8', 0, 'a');
-    case 4, d(2,ix+(0:npts-1)) = fread(tev, npts/2, 'float64', 0, 'a');
-    case 5, d(2,ix+(0:npts-1)) = fread(tev, npts/2, 'int64', 0, 'a');
-    otherwise
-      error('Unknown data file: %d', index.format(n));
-  end
-  ix = ix + npts;
+  d(1,ix+(0:nsamp-1)) = t;
+  ix = ix + nsamp;
 end
-fclose(tev);
+
 
 %%BENCH%% fprintf('%.1f Ksamples/s\n', size(d, 2)/1000/toc);
 
