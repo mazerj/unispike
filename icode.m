@@ -12,17 +12,11 @@ function y = icode(x)
 %   STR4 is the 4-char store name (eg, 'RAW0')
 %   INT is an int32 (4byte integer)
 %
-
+% Thu Apr 10 17:04:17 2014 mazer 
+%   - updated to use Mark Hanus' (@TDT) faster typecast version
+%
 if ischar(x)
-  if length(x) ~= 4
-    error('Store names must be 4 chars long');
-  end
-  y = sum(x .* 2.^(8*(0:3)));
+  y = typecast(uint8(x), 'int32');
 else
-  shiftlist = -8*(0:3);
-  str = '1234';
-  for n=1:4
-    str(n) = char(mod(bitshift(x, shiftlist(n)), 256));
-  end
-  y=str;
+  y = char(typecast(x, 'uint8'));
 end
