@@ -7,6 +7,7 @@ if isstruct(varargin{1})
       '/auto/data/critters/DataTanks/'
       '/auto/tdt1/DataTanks/'
       '/auto/tdt2/DataTanks/'
+      '/auto/tdt3/DataTanks/'
       };
   pf = varargin{1};
   
