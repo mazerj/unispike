@@ -124,25 +124,40 @@ for n = ns
   if fseek(tev, index.offset(n), -1) < 0
     error(ferror(tev))
   end
-  npts = index.size(n) - 10;            % in 4byte units
+  nlongs = index.size(n) - 10;          % in 4byte units
   switch index.format(n)
     case 0                              % DFORM_FLOAT
-      nsamp = npts * 4 / 4;             % nlongs / sizeof(long) * size(float32)
+      nsamp = nlongs * 4 / 4;           % nlongs / sizeof(long) * size(float32)
       [v, cnt] = fread(tev, nsamp, 'float32', 0, 'a');
-      if cnt ~= nsamp, error('ran out of data'); end
+      if cnt ~= nsamp, error('ran out of float32 data'); end
+      d(2,ix+(0:nsamp-1)) = v;
+    case 1                              % DFORM_LONG
+      nsamp = nlongs * 4 / 4;
+      [v, cnt] = fread(tev, nsamp, 'int32', 0, 'a');
+      if cnt ~= nsamp, error('ran out of 32 data'); end
       d(2,ix+(0:nsamp-1)) = v;
     case 2                              % DFORM_SHORT
-      nsamp = npts * 4 / 2;             % nlongs / sizeof(long) * size(int16)
+      nsamp = nlongs * 4 / 2;
       [v, cnt] = fread(tev, nsamp, 'int16', 0, 'a');
-      if cnt ~= nsamp, error('ran out of data'); end
+      if cnt ~= nsamp, error('ran out of int16 data'); end
+      d(2,ix+(0:nsamp-1)) = v;
+    case 3                              % DFORM_BYTE
+      nsamp = nlongs * 4 / 1;
+      [v, cnt] = fread(tev, nsamp, 'int8', 0, 'a');
+      if cnt ~= nsamp, error('ran out of int8 data'); end
       d(2,ix+(0:nsamp-1)) = v;
     case 4                              % DFORM_DOUBLE
-      nsamp = npts * 4 / 8;             % nlongs / sizeof(long) * size(float64)
+      nsamp = nlongs * 4 / 8;
       [v, cnt] = fread(tev, nsamp, 'float64', 0, 'a');
-      if cnt ~= nsamp, error('ran out of data'); end
+      if cnt ~= nsamp, error('ran out of float64 data'); end
+      d(2,ix+(0:nsamp-1)) = v;
+    case 5                              % DFORM_QWORD
+      nsamp = nlongs * 4 / 8;
+      [v, cnt] = fread(tev, nsamp, 'int64', 0, 'a');
+      if cnt ~= nsamp, error('ran out of int64 data'); end
       d(2,ix+(0:nsamp-1)) = v;
     otherwise
-      error('unsupported data format: %d', index.format(n));
+      error('unsupported TDT data format: #%d', index.format(n));
   end
   fclose(tev);
   t = index.timestamp(n) + ((0:(nsamp-1)) ./ index.frequency(n));;

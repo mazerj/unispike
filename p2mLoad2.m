@@ -5,12 +5,12 @@ function pf = p2mLoad2(varargin)
 % to merge multiple p2m/uni files into a single data structure.
 %
 % INPUT
-%  fname - filename to load
+%  fname - filename to load -- must be a .p2m or .merge file!
 %    - if fname is a regular .p2m file, just load it like p2mLoad()
-%    - otherwise, assume the file is a text file with one p2m filename
-%      per line and load all the specified files into a single
-%      data structure.
-%    - you can also include lines indicate the channel and sortcode:
+%    - if fname is a .merge file, it should be a text file with one
+%      p2m filename per line and the specified files will be loaded
+%      into a single merged data structure.
+%    - .merge files can also include lines indicate the chn and sortcode:
 %         channel=1
 %         sortcode=4
 %         /this/is/file1.p2m
@@ -18,11 +18,15 @@ function pf = p2mLoad2(varargin)
 %      and uniselect() will be called automatically to select the
 %      indicated spike channel.
 %
-%   p2mLoad2('nouni') and p2mLoad2('uni') turns automatic unifile
-%   generation off and on (for current session only!).
+% If p2m file doesn't exist (or is out of date), but the
+% corresponding pype file exists, the p2m file will be
+% automatically created or updated.
 %
-%   If you don't specify a filename and one's been recently loaded,
-%   it'll return it..
+% p2mLoad2('nouni') and p2mLoad2('uni') turns automatic unifile
+% generation off and on (for current session only!).
+%
+% If you don't specify a filename and one's been recently loaded,
+% it'll return it..
 %
 % OUTPUT
 %  pf  - composite p2m data structure
@@ -87,17 +91,26 @@ else
   autogen = p2mauto;
 end
 
-if strcmp(fname(end-2:end), 'p2m') == 0
-  fname = [fname '.p2m'];
+mergefile = 0;
+switch filetype(fname)
+  case 'merge'
+    mergefile = 1;
+  case 'p2m'
+    fname = fname;
+  otherwise
+    fname = [fname '.p2m'];
 end
 
 p2mfile = fname;
 pypefile = strrep(p2mfile, '.p2m', '');
 if ~exist(pypefile, 'file')
+  if ~exist(p2mfile, 'file')
+    error('missing both p2mfile and pypefile');
+  end
   pypefile = [];
 end
-  
-if pypefile
+
+if ~isempty(pypefile)
   pypefile_d = dir(pypefile);
   p2mfile_d = dir(p2mfile);
   if ~exist(p2mfile, 'file') || pypefile_d.datenum > p2mfile_d.datenum
@@ -110,7 +123,7 @@ if pypefile
   end
 end
 
-try
+if ~mergefile
   pf = p2mLoad(fname, [], 0);
   if uniGen
     try
@@ -120,8 +133,7 @@ try
     end
   end
   lastLoaded = pf;
-  return
-catch
+else
   fprintf('[p2mLoad2: loading text file for merge]\n');
 
   channel = [];
@@ -165,3 +177,7 @@ catch
   end
   lastLoaded = pf;
 end
+
+function x = endswith(s, suffix)
+x = strcmp(s(end-length(suffix)+1:end), suffix);
+%fprintf('%s, %s -> %d\n', s, suffix, x);
