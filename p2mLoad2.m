@@ -97,7 +97,7 @@ flist = jls(fname);
 if length(flist) > 1
   pfs = {};
   for n = 1:length(flist)
-    pfs{n} = p2mLoad3(flist{n});
+    pfs{n} = p2mLoad2(flist{n});
   end
   pf = p2mMerge(pfs);
   return
