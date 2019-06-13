@@ -63,6 +63,7 @@ function pf = p2mLoad2(varargin)
 %  - added p2mload2 [no]auto option to turn off automatic
 %    freshening of p2m files
 
+
 persistent lastLoaded
 
 if (nargin == 0 && ~isempty(lastLoaded))
@@ -89,6 +90,17 @@ else
   fname = varargin{1};
   uniGen = uni;
   autogen = p2mauto;
+end
+
+% if filename specifies a list of files, then merge them and return
+flist = jls(fname);
+if length(flist) > 1
+  pfs = {};
+  for n = 1:length(flist)
+    pfs{n} = p2mLoad3(flist{n});
+  end
+  pf = p2mMerge(pfs);
+  return
 end
 
 mergefile = 0;
