@@ -94,7 +94,9 @@ end
 
 % if filename specifies a list of files, then merge them and return
 flist = jls(fname);
-if length(flist) > 1
+if length(flist) == 1
+  fname = flist{1};
+elseif length(flist) > 1
   pfs = {};
   for n = 1:length(flist)
     pfs{n} = p2mLoad2(flist{n});
